@@ -7,10 +7,15 @@ const port = 5000;
 /* Global variables */
 let listingData, server;
 
+function Error404(response) {
+    response.writeHead(404, { "Context-Type": "text/plain" });
+    response.write("Bad gateway error");
+}
+
 const requestHandler = (request, response) => {
     const parsedUrl = url.parse(request.url);
 
-    /*
+     /*
       Your request handler should send listingData in the JSON format as a response if a GET request
       is sent to the '/listings' path. Otherwise, it should send a 404 error.
 
@@ -26,9 +31,18 @@ const requestHandler = (request, response) => {
       https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types
 
      */
+
+    if (request.method === "GET" && parsedUrl.path === "/listings") {
+        response.writeHead(202, { "Context-Type": "text/plain" });
+        response.write(listingData);
+    } else {
+        Error404(response);
+    }
+    response.end();
 };
 
 fs.readFile('listings.json', 'utf8', (err, data) => {
+
     /*
       This callback function should save the data in the listingData variable,
       then start the server.
@@ -40,13 +54,23 @@ fs.readFile('listings.json', 'utf8', (err, data) => {
      */
 
     // Check for errors
-
+    if (err) return null;
 
     // Save the sate in the listingData variable already defined
-
+    listingData = data;
 
     // Creates the server
+    server = http.createServer(requestHandler);
 
     // Start the server
+    startServer(server);
+
+
 
 });
+
+function startServer(server) {
+    server.listen(port, function () {
+        console.log("Server listening on: http://localhost:" + port);
+    });
+}
